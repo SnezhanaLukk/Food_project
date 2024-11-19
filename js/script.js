@@ -123,44 +123,44 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // const openTimer = setTimeout(openModal,5000);
 
-    function showModalByScroll(){
-        if (window.pageYOffset + document.documentElement.clientHeight>=document.documentElement.scrollHeight - 1){
+    function showModalByScroll() {
+        if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight - 1) {
             openModal();
-            window.removeEventListener('scroll',showModalByScroll);
+            window.removeEventListener('scroll', showModalByScroll);
         }
     }
 
-    window.addEventListener('scroll',showModalByScroll);
-    
-});
+    window.addEventListener('scroll', showModalByScroll);
 
-// Напишем меню через классы
 
-class MenuCard{
-    constructor(src, alt, title, descr, price, parentSelector, ...classes) {
-        this.src = src;
-        this.alt = alt;
-        this.title = title;
-        this.descr = descr;
-        this.price = price;
-        this.classes = classes;
-        this.parent = document.querySelector(parentSelector);
-        this.transfer = 98;
-        this.calcPrice();
-    }
-    calcPrice(){
-        this.price = +this.price*this.transfer;
-    }
-    render(){
-        const element = document.createElement('div');
-        if (this.classes.length===0){
-            this.element = 'menu__item';
-            element.classList.add(this.element)
-        }else{
-            this.classes.forEach(className => element.classList.add(className));
+
+    // Напишем меню через классы
+
+    class MenuCard {
+        constructor(src, alt, title, descr, price, parentSelector, ...classes) {
+            this.src = src;
+            this.alt = alt;
+            this.title = title;
+            this.descr = descr;
+            this.price = price;
+            this.classes = classes;
+            this.parent = document.querySelector(parentSelector);
+            this.transfer = 98;
+            this.calcPrice();
         }
-        
-        element.innerHTML=`
+        calcPrice() {
+            this.price = +this.price * this.transfer;
+        }
+        render() {
+            const element = document.createElement('div');
+            if (this.classes.length === 0) {
+                this.element = 'menu__item';
+                element.classList.add(this.element)
+            } else {
+                this.classes.forEach(className => element.classList.add(className));
+            }
+
+            element.innerHTML = `
             <img src="${this.src}" alt="${this.alt}">
             <h3 class="menu__item-subtitle">${this.title}</h3>
             <div class="menu__item-descr">${this.descr}</div>
@@ -170,35 +170,77 @@ class MenuCard{
                 <div class="menu__item-total"><span>${this.price}</span> руб/день</div>
             </div>
         `;
-        this.parent.append(element);
+            this.parent.append(element);
+        }
     }
-}
 
-new MenuCard (
-    "img/tabs/vegy.jpg",
-    "vegy",
-    'Меню "Фитнес"',
-    'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-    9,
-    '.menu .container'    
-).render();
+    new MenuCard(
+        "img/tabs/vegy.jpg",
+        "vegy",
+        'Меню "Фитнес"',
+        'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
+        9,
+        '.menu .container'
+    ).render();
 
-new MenuCard(
-    "img/tabs/post.jpg",
-    "post",
-    'Меню "Постное"',
-    'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-    14,
-    '.menu .container',
-    'menu__item',
-).render();
+    new MenuCard(
+        "img/tabs/post.jpg",
+        "post",
+        'Меню "Постное"',
+        'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
+        14,
+        '.menu .container',
+        'menu__item',
+    ).render();
 
-new MenuCard(
-    "img/tabs/elite.jpg",
-    "elite",
-    'Меню “Премиум”',
-    'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, мясо, фермерские овощи и фрукты - ресторанное меню без похода в ресторан!',
-    20,
-    '.menu .container',
-    'menu__item',
-).render();
+    new MenuCard(
+        "img/tabs/elite.jpg",
+        "elite",
+        'Меню “Премиум”',
+        'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, мясо, фермерские овощи и фрукты - ресторанное меню без похода в ресторан!',
+        20,
+        '.menu .container',
+        'menu__item',
+    ).render();
+
+    //Forms
+
+    const forms = document.querySelectorAll('form');
+    const message = {
+        loading: 'Загрузка',
+        success: 'Спасибо! Скоро мы с Вами свяжемся!',
+        failure: 'Что-то пошло не так...'
+    };
+
+    forms.forEach(item=>{
+        postData(item);
+    });
+
+    function postData(form){
+        form.addEventListener('submit', (e)=>{
+            e.preventDefault();
+
+            let statusMessage = document.createElement('div');
+            statusMessage.classList.add('status');
+            statusMessage.textContent = message.loading;
+
+            const request = new XMLHttpRequest();
+            request.open('POST', 'php/server.php');
+            request.setRequestHeader('Content-type', 'multipart/form-data');
+            const formData = new FormData(form);//Специальный объект, который позволяет с определенной формы сформировать данные в формате ключ: значение
+            
+            request.send(formData);
+
+            request.addEventListener('load', ()=>{
+                if (request.status===200){
+                    console.log(request.response);
+                    statusMessage.textContent = message.success;
+                } else{
+                    console.log(request.response);
+                    statusMessage.textContent = message.failure;
+                }
+            })
+        });
+    }
+
+});
