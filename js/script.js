@@ -88,8 +88,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // modal window
 
     const modalTrigger = document.querySelectorAll('[data-modal]'),
-        modal = document.querySelector('.modal'),
-        modalCloseBtn = document.querySelector('[data-close]');
+          modal = document.querySelector('.modal');
 
     modalTrigger.forEach(btn => {
         btn.addEventListener('click', openModal);
@@ -103,8 +102,6 @@ window.addEventListener('DOMContentLoaded', () => {
         clearInterval(openTimer);
     };
 
-    modalCloseBtn.addEventListener('click', closeModal);
-
     function closeModal() {
         modal.classList.add('hide');
         modal.classList.remove('show');
@@ -113,7 +110,7 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     modal.addEventListener('click', (e) => {
-        if (e.target === modal)
+        if (e.target === modal || e.target.getAttribute('data-close') == '')
             closeModal();
     });
     document.addEventListener('keydown', (e) => {
@@ -121,7 +118,7 @@ window.addEventListener('DOMContentLoaded', () => {
             closeModal();
     });
 
-    // const openTimer = setTimeout(openModal,5000);
+    const openTimer = setTimeout(openModal,50000);
 
     function showModalByScroll() {
         if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight - 1) {
@@ -207,7 +204,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const forms = document.querySelectorAll('form');
     const message = {
-        loading: 'Загрузка',
+        loading: 'icons/spinner.svg',
         success: 'Спасибо! Скоро мы с Вами свяжемся!',
         failure: 'Что-то пошло не так...'
     };
@@ -220,27 +217,67 @@ window.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', (e)=>{
             e.preventDefault();
 
-            let statusMessage = document.createElement('div');
-            statusMessage.classList.add('status');
-            statusMessage.textContent = message.loading;
+            let statusMessage = document.createElement('img');
+            statusMessage.src = message.loading;
+            statusMessage.style.cssText = `
+                display: block;
+                margin: 0 auto;
+            `;
+            
+            form.insertAdjacentElement('afterend', statusMessage);
 
             const request = new XMLHttpRequest();
-            request.open('POST', 'php/server.php');
-            request.setRequestHeader('Content-type', 'multipart/form-data');
-            const formData = new FormData(form);//Специальный объект, который позволяет с определенной формы сформировать данные в формате ключ: значение
+            request.open('POST', 'php/server.php');// php не работает нормально с json, нужно декодировать из json
             
-            request.send(formData);
+            request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            const formData = new FormData(form);//Специальный объект, который позволяет с определенной формы сформировать данные в формате ключ: значение
+            //Необходимо FormData переписать в формат json. Но т. к. эта форма специфична, необходимо перебрать
+            const object = {};//создадим объект
+            formData.forEach(function(value, key){
+                object[key] = value;
+            });//записываем
+
+            const json = JSON.stringify(object);//конвентор объекта в json
+            request.send(json);//отправляем json
 
             request.addEventListener('load', ()=>{
                 if (request.status===200){
                     console.log(request.response);
-                    statusMessage.textContent = message.success;
+                    showThanksModal(message.success);
+                    form.reset();
+                    setTimeout(() => {
+                        statusMessage.remove();
+                    }, 2000);
                 } else{
                     console.log(request.response);
-                    statusMessage.textContent = message.failure;
+                    statusMessage.textContent = '';
+                    showThanksModal(message.failure);
                 }
             })
         });
+    }
+
+    function showThanksModal(message){
+        const previosModalDialog = document.querySelector('.modal__dialog');
+        previosModalDialog.classList.add('hide');//скрываем добавленное окно для заполнения
+        openModal();
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class = "modal__content">
+                <div class = "modal__close" data-close>×</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+
+        document.querySelector('.modal').append(thanksModal);
+        setTimeout(()=>{
+            thanksModal.remove();
+            previosModalDialog.classList.remove('hide');
+            previosModalDialog.classList.add('show');
+            closeModal();
+        }, 4000);
+
     }
 
 });
